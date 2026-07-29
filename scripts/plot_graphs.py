@@ -49,7 +49,6 @@ def main():
         plt.plot(cores, cores, linestyle='--', color='gray', label='Идеальное линейное ускорение')
         plt.xlabel("Количество ядер (Cores)")
         plt.ylabel("Ускорение по IPC (Speedup)")
-        plt.title(f"Сильное масштабирование: {conf['label']}")
         plt.xticks(cores)
         plt.legend()
         plt.grid(True)

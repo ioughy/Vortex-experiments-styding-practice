@@ -23,7 +23,7 @@ run_test() {
     local args=$6
     
     echo "Running: $test_name... (clusters=$clusters, cores=$cores)"
-    ./ci/blackbox.sh --clusters="$clusters" --cores="$cores" $cache_flags --app="$app" --args="$args" > "$LOG_DIR/${test_name}.log" 2>&1
+    ./ci/blackbox.sh --clusters="$clusters" --cores="$cores" "$cache_flags" --app="$app" --args="$args" > "$LOG_DIR/${test_name}.log" 2>&1
 }
 
 # -------------------------------------
