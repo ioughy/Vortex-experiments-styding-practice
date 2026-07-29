@@ -1,62 +1,71 @@
 import os
 import re
 import csv
+import glob
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
-
 LOG_DIR = os.path.join(BASE_DIR, "results", "raw_logs")
 CSV_DIR = os.path.join(BASE_DIR, "results", "csv")
-CSV_FILE = os.path.join(CSV_DIR, "experiment_data.csv")
+OUTPUT_CSV = os.path.join(CSV_DIR, "results.csv")
 
-def parse_logs():
-    os.makedirs(CSV_DIR, exist_ok=True)
+def parse_log(filepath):
+    with open(filepath, 'r') as f:
+        content = f.read()
     
-    results = []
-    perf_regex = r"PERF: instrs=(\d+), cycles=(\d+), IPC=([\d\.]+)"
+    instrs_match = re.search(r'instrs[=:]\s*(\d+)', content)
+    cycles_match = re.search(r'cycles[=:]\s*(\d+)', content)
+    ipc_match = re.search(r'IPC[=:]\s*([\d\.]+)', content)
     
+    ipc = None
+    cycles = None
+    
+    if ipc_match:
+        ipc = float(ipc_match.group(1))
+    elif instrs_match and cycles_match:
+        instrs = float(instrs_match.group(1))
+        cycles_val = float(cycles_match.group(1))
+        if cycles_val > 0:
+            ipc = instrs / cycles_val
+            
+    if cycles_match:
+        cycles = int(cycles_match.group(1))
+        
+    return ipc, cycles
+
+def main():
     if not os.path.exists(LOG_DIR):
-        print(f"Error: Log directory not found at {LOG_DIR}")
+        print(f"Ошибка: Директория {LOG_DIR} не найдена.")
         return
 
-    for filename in sorted(os.listdir(LOG_DIR)):
-        if filename.endswith(".log"):
-            filepath = os.path.join(LOG_DIR, filename)
-            with open(filepath, 'r') as f:
-                content = f.read()
-                matches = re.findall(perf_regex, content)
-                if matches:
-                    instrs, cycles, ipc = matches[-1]
-                    
-                    parts = filename.replace('.log', '').split('_')
-                    app = parts[0]
-                    scaling = parts[1]
-                    cores = parts[2].replace('c', '')
-                    cache = "No L2"
-                    if "L2L3" in parts: 
-                        cache = "L2+L3"
-                    elif "L2" in parts: 
-                        cache = "L2"
-                    
-                    l1_size = "16K"
+    os.makedirs(CSV_DIR, exist_ok=True)
 
-                    results.append({
-                        "Test Name": filename.replace('.log', ''),
-                        "App": app,
-                        "Scaling": scaling,
-                        "Cores": int(cores),
-                        "Cache": cache,
-                        "L1 Size": l1_size,
-                        "Cycles": int(cycles),
-                        "IPC": float(ipc)
-                    })
-
-    with open(CSV_FILE, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=["Test Name", "App", "Scaling", "Cores", "Cache", "L1 Size", "Cycles", "IPC"])
-        writer.writeheader()
-        writer.writerows(results)
+    log_files = glob.glob(os.path.join(LOG_DIR, "*.log"))
+    results = []
     
-    print(f"Данные собраны и сохранены в {CSV_FILE}")
+    for log_file in log_files:
+        filename = os.path.basename(log_file)
+        test_name = filename.replace(".log", "")
+        
+        ipc, cycles = parse_log(log_file)
+        if ipc is not None:
+            results.append({
+                "test_name": test_name, 
+                "ipc": ipc,
+                "cycles": cycles
+            })
+        else:
+            print(f"Предупреждение: Не удалось извлечь IPC из {filename}")
+            
+    results.sort(key=lambda x: x["test_name"])
+    
+    with open(OUTPUT_CSV, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=["test_name", "ipc", "cycles"])
+        writer.writeheader()
+        for row in results:
+            writer.writerow(row)
+            
+    print(f"Успешно обработано {len(results)} логов. Результат сохранён в {OUTPUT_CSV}")
 
 if __name__ == "__main__":
-    parse_logs()
+    main()

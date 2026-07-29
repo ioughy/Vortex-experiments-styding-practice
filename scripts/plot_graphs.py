@@ -1,83 +1,61 @@
+import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(SCRIPT_DIR)
-PLOT_DIR = os.path.join(BASE_DIR, "results/plots")
+def get_metrics(df, test_name):
+    row = df[df['test_name'] == test_name]
+    if not row.empty:
+        return row.iloc[0]['ipc'], row.iloc[0]['cycles']
+    return None, None
 
-def plot_and_save():
-    os.makedirs(PLOT_DIR, exist_ok=True)
+def main():
+    if not os.path.exists("results/csv/results.csv"):
+        print("Ошибка: файл results.csv не найден. Сначала запустите parse_logs.py")
+        return
+
+    df = pd.read_csv("results/csv/results.csv")
     
-    # -------------------------
-    # ГРАФИК 1: Vecadd Strong Scaling
-    # -------------------------
-    plt.figure(figsize=(7, 4))
-    plt.plot([1, 2, 4], [1, 1.02, 1.05], marker='o', label='Vecadd (No L2)')
-    plt.plot([1, 2, 4], [1, 1.16, 1.14], marker='s', label='Vecadd (L2)')
-    plt.plot([1, 2, 4], [1, 2, 4], 'k--', label='Идеальное ускорение')
-    plt.title('Strong Scaling: Ускорение vs Ядра (vecadd)')
-    plt.xlabel('Количество ядер')
-    plt.ylabel('Ускорение (Speedup)')
-    plt.xticks([1, 2, 4])
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(os.path.join(PLOT_DIR, "1_strong_scaling_vecadd.pdf"), bbox_inches='tight')
-    plt.close()
-
-    # -------------------------
-    # ГРАФИК 2: Sgemm Strong Scaling
-    # -------------------------
-    plt.figure(figsize=(7, 4))
-    plt.plot([1, 2, 4], [1.0, 1.33, 1.51], marker='o', color='green', label='Sgemm (No L2)')
-    plt.plot([1, 2, 4], [1, 2, 4], 'k--', label='Идеальное ускорение')
-    plt.title('Strong Scaling: Ускорение vs Ядра (sgemm)')
-    plt.xlabel('Количество ядер')
-    plt.ylabel('Ускорение (Speedup)')
-    plt.xticks([1, 2, 4])
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(os.path.join(PLOT_DIR, "2_strong_scaling_sgemm.pdf"), bbox_inches='tight')
-    plt.close()
-
-    # -------------------------
-    # ГРАФИК 3: Cache Impact
-    # -------------------------
-    configs = ['No L2\n(1C)', 'L2\n(1C)', 'No L2\n(4C)', 'L2\n(4C)', 'L2+L3\n(4C)']
-    cycles = [622459, 537133, 588897, 543280, 543755]
-    colors = ['#1f77b4', '#2ca02c', '#ff7f0e', '#d62728', '#9467bd']
+    os.makedirs("results/plots", exist_ok=True)
     
-    plt.figure(figsize=(7, 4))
-    plt.bar(configs, cycles, color=colors)
-    plt.title('Влияние иерархии кэшей на время выполнения (Cycles)')
-    plt.ylabel('Такты (Чем меньше, тем лучше)')
-    plt.grid(True, axis='y', linestyle='--', alpha=0.7)
-    plt.tight_layout()
-    plt.savefig(os.path.join(PLOT_DIR, "3_cache_hierarchy_impact.pdf"), bbox_inches='tight')
-    plt.close()
-
-    # -------------------------
-    # ГРАФИК 4: Weak Scaling
-    # -------------------------
-    plt.figure(figsize=(7, 4))
-    cores = [1, 2, 4]
-    real_cycles = [622459, 1231430, 2381645]
-    ideal_cycles = [622459, 622459, 622459]
+    cores = [1, 2, 4, 8, 16, 32, 64]
     
-    plt.plot(cores, real_cycles, marker='o', label='Реальное время (Vortex)')
-    plt.plot(cores, ideal_cycles, 'k--', label='Идеальное время (нет конфликта)')
-    plt.title('Weak Scaling: Рост времени при пропорциональном росте задачи')
-    plt.xlabel('Количество ядер (и объем данных)')
-    plt.ylabel('Такты (Cycles)')
-    plt.xticks([1, 2, 4])
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(os.path.join(PLOT_DIR, "4_weak_scaling.pdf"), bbox_inches='tight')
-    plt.close()
+    def calc_speedup(ips_list):
+        base = ips_list[0]
+        if base and base > 0:
+            return [ip / base if ip else None for ip in ips_list]
+        return [None] * len(ips_list)
 
-    print(f"4 графика успешно сохранены в {PLOT_DIR}")
+    # --- STRONG SCALING (6 графиков) ---
+    strong_configs = [
+        {"app": "vecadd", "size": "16384", "label": "vecadd (16384 elements)", "marker": "o", "color": "b"},
+        {"app": "vecadd", "size": "32768", "label": "vecadd (32768 elements)", "marker": "s", "color": "r"},
+        {"app": "vecadd", "size": "65536", "label": "vecadd (65536 elements)", "marker": "*", "color": "c"},
+        {"app": "sgemm", "size": "128", "label": "sgemm (128 elements)", "marker": "^", "color": "g"},
+        {"app": "sgemm", "size": "256", "label": "sgemm (256 elements)", "marker": "D", "color": "m"},
+        {"app": "sgemm", "size": "512", "label": "sgemm (512 elements)", "marker": "v", "color": "orange"}
+    ]
+    
+    for conf in strong_configs:
+        ips = []
+        for c in cores:
+            name = f"{conf['app']}_strong_{c}c_{conf['size']}"
+            ipc, _ = get_metrics(df, name)
+            ips.append(ipc)
+            
+        speedups = calc_speedup(ips)
+        
+        plt.figure(figsize=(8, 6))
+        plt.plot(cores, speedups, marker=conf['marker'], color=conf['color'], label=conf['label'])
+        plt.plot(cores, cores, linestyle='--', color='gray', label='Идеальное линейное ускорение')
+        plt.xlabel("Количество ядер (Cores)")
+        plt.ylabel("Ускорение по IPC (Speedup)")
+        plt.title(f"Сильное масштабирование: {conf['label']}")
+        plt.xticks(cores)
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(f"results/plots/strong_{conf['app']}_{conf['size']}.pdf")
+        plt.close()
+        print(f"Сохранён график: results/plots/strong_{conf['app']}_{conf['size']}.pdf")
 
 if __name__ == "__main__":
-    plot_and_save()
+    main()
