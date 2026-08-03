@@ -17,7 +17,7 @@ def main():
     
     os.makedirs("results/plots", exist_ok=True)
     
-    cores = [1, 2, 4, 8, 16, 32, 64]
+    cores = [1, 2, 4, 8, 16, 32, 60]
     
     def calc_speedup(ips_list):
         base = ips_list[0]
@@ -25,15 +25,13 @@ def main():
             return [ip / base if ip else None for ip in ips_list]
         return [None] * len(ips_list)
 
-    # --- STRONG SCALING (6 графиков) ---
+    # --- STRONG SCALING (4 графика) ---
     strong_configs = [
-        {"app": "vecadd", "size": "16384", "label": "vecadd (16384 elements)", "marker": "o", "color": "b"},
-        {"app": "vecadd", "size": "32768", "label": "vecadd (32768 elements)", "marker": "s", "color": "r"},
-        {"app": "vecadd", "size": "65536", "label": "vecadd (65536 elements)", "marker": "*", "color": "c"},
-        {"app": "sgemm", "size": "128", "label": "sgemm (128 elements)", "marker": "^", "color": "g"},
-        {"app": "sgemm", "size": "256", "label": "sgemm (256 elements)", "marker": "D", "color": "m"},
-        {"app": "sgemm", "size": "512", "label": "sgemm (512 elements)", "marker": "v", "color": "orange"}
-    ]
+        {"app": "sgemm", "size": "64",  "label": "sgemm (64 elements)",  "marker": "^", "color": "g"},
+        {"app": "sgemm", "size": "128", "label": "sgemm (128 elements)", "marker": "D", "color": "m"},
+        {"app": "sgemm", "size": "256", "label": "sgemm (256 elements)", "marker": "v", "color": "orange"},
+        {"app": "sgemm", "size": "512", "label": "sgemm (512 elements)", "marker": "o", "color": "yellow"}
+]
     
     for conf in strong_configs:
         ips = []
