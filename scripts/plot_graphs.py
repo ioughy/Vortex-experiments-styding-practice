@@ -27,10 +27,10 @@ def main():
 
     # --- STRONG SCALING (4 графика) ---
     strong_configs = [
-        {"app": "sgemm", "size": "64",  "label": "sgemm (64 elements)",  "marker": "^", "color": "g"},
-        {"app": "sgemm", "size": "128", "label": "sgemm (128 elements)", "marker": "D", "color": "m"},
-        {"app": "sgemm", "size": "256", "label": "sgemm (256 elements)", "marker": "v", "color": "orange"},
-        {"app": "sgemm", "size": "512", "label": "sgemm (512 elements)", "marker": "o", "color": "yellow"}
+        {"app": "sgemm", "size": "64",  "label": "sgemm (64 x 64 elements)",  "marker": "^", "color": "g"},
+        {"app": "sgemm", "size": "128", "label": "sgemm (128 x 128 elements)", "marker": "D", "color": "m"},
+        {"app": "sgemm", "size": "256", "label": "sgemm (256 x 256 elements)", "marker": "v", "color": "orange"},
+        {"app": "sgemm", "size": "512", "label": "sgemm (512 x 512 elements)", "marker": "o", "color": "yellow"}
 ]
     
     for conf in strong_configs:
