@@ -17,7 +17,7 @@ def main():
     
     os.makedirs("results/plots", exist_ok=True)
     
-    cores = [1, 2, 4, 8, 16, 32, 60]
+    cores = [1, 2, 4, 8, 16, 32, 64]
     
     def calc_speedup(ips_list):
         base = ips_list[0]
