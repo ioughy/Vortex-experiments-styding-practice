@@ -1,7 +1,7 @@
-import os
-import re
 import csv
 import glob
+import os
+import re
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)

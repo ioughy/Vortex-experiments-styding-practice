@@ -16,6 +16,7 @@ def test_shell_scripts_syntax():
         result = subprocess.run(
             ["bash", "-n", script],
             capture_output=True,
+            check=False,
         )
         assert result.returncode == 0, (
             f"Синтаксическая ошибка в {script}:\n"

@@ -1,6 +1,8 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
 
 def get_metrics(df, test_name):
     row = df[df['test_name'] == test_name]
