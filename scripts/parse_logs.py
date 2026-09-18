@@ -13,23 +13,23 @@ def parse_log(filepath):
     with open(filepath, 'r') as f:
         content = f.read()
     
-    instrs_match = re.search(r'instrs[=:]\s*(\d+)', content)
-    cycles_match = re.search(r'cycles[=:]\s*(\d+)', content)
-    ipc_match = re.search(r'IPC[=:]\s*([\d\.]+)', content)
+    instrs_matches = re.findall(r'instrs[=:]\s*(\d+)', content)
+    cycles_matches = re.findall(r'cycles[=:]\s*(\d+)', content)
+    ipc_matches = re.findall(r'IPC[=:]\s*([\d\.]+)', content)
     
     ipc = None
     cycles = None
     
-    if ipc_match:
-        ipc = float(ipc_match.group(1))
-    elif instrs_match and cycles_match:
-        instrs = float(instrs_match.group(1))
-        cycles_val = float(cycles_match.group(1))
+    if ipc_matches:
+        ipc = float(ipc_matches[-1])
+    elif instrs_matches and cycles_matches:
+        instrs = float(instrs_matches[-1])
+        cycles_val = float(cycles_matches[-1])
         if cycles_val > 0:
             ipc = instrs / cycles_val
             
-    if cycles_match:
-        cycles = int(cycles_match.group(1))
+    if cycles_matches:
+        cycles = int(cycles_matches[-1])
         
     return ipc, cycles
 
