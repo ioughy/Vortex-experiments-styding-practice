@@ -10,13 +10,13 @@ jobs:
   lint-python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.1.0
         
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.14.4
         
       - name: Install dependencies
         run: uv sync
@@ -27,7 +27,7 @@ jobs:
   lint-bash:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
@@ -38,13 +38,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.1.0
         
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.14.4
         
       - name: Install dependencies
         run: uv sync
